@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>College Info Chatbot - Compact WhatsApp Style</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #ece5dd;
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .chat-container {
+      background: white;
+      width: 100%;
+      max-width: 420px;
+      height: 55vh;
+      min-height: 300px;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .chat-header {
+      background: #075e54;
+      color: white;
+      padding: 15px 20px;
+      font-weight: bold;
+      font-size: 1.25rem;
+      text-align: center;
+      user-select: none;
+    }
+
+    .chat-messages {
+      flex: 1;
+      padding: 12px 15px;
+      overflow-y: auto;
+      background: #ece5dd;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      scrollbar-width: thin;
+      scrollbar-color: #ccc transparent;
+    }
+
+    .chat-messages::-webkit-scrollbar {
+      width: 6px;
+    }
+    .chat-messages::-webkit-scrollbar-thumb {
+      background-color: #ccc;
+      border-radius: 3px;
+    }
+
+    .message {
+      max-width: 70%;
+      padding: 10px 14px;
+      border-radius: 7.5px;
+      font-size: 1rem;
+      line-height: 1.3;
+      word-wrap: break-word;
+      box-shadow: 0 1px 0.5px rgba(0,0,0,0.13);
+      user-select: text;
+      transition: background-color 0.3s;
+    }
+    .message.user {
+      background: #68f100;
+      align-self: flex-end;
+      border-bottom-right-radius: 0;
+    }
+    .message.bot {
+      background: white;
+      align-self: flex-start;
+      border-bottom-left-radius: 0;
+    }
+
+    .chat-input {
+      display: flex;
+      padding: 10px 12px;
+      background: #f0f0f0;
+      border-top: 1px solid #ddd;
+    }
+    .chat-input input[type="text"] {
+      flex: 1;
+      padding: 10px 14px;
+      font-size: 1rem;
+      border-radius: 20px;
+      border: 1px solid #ddd;
+      outline: none;
+      transition: border-color 0.3s;
+    }
+    .chat-input input[type="text"]:focus {
+      border-color: #075e54;
+    }
+    .chat-input button {
+      background: #075e54;
+      border: none;
+      color: white;
+      padding: 0 18px;
+      margin-left: 10px;
+      border-radius: 20px;
+      font-weight: bold;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background-color 0.3s;
+      user-select: none;
+    }
+    .chat-input button:hover {
+      background: #0a7761;
+    }
+
+    /* Responsive tweaks */
+    @media (max-width: 480px) {
+      .chat-container {
+        height: 50vh;
+        min-height: 280px;
+        max-width: 100%;
+        border-radius: 10px;
+      }
+      .chat-header {
+        font-size: 1.1rem;
+        padding: 12px 15px;
+      }
+      .chat-messages {
+        padding: 10px;
+        gap: 8px;
+      }
+      .message {
+        font-size: 0.9rem;
+        max-width: 80%;
+        padding: 8px 12px;
+      }
+      .chat-input input[type="text"] {
+        font-size: 0.9rem;
+        padding: 8px 12px;
+      }
+      .chat-input button {
+        font-size: 0.9rem;
+        padding: 0 14px;
+        margin-left: 8px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="chat-container" role="main" aria-label="Chat interface">
+    <div class="chat-header">College Info Chatbot</div>
+    <div class="chat-messages" id="chatMessages" aria-live="polite" aria-atomic="false"></div>
+    <form id="chatForm" class="chat-input" autocomplete="off" aria-label="Send message form">
+      <input
+        type="text"
+        id="topicInput"
+        placeholder="Type your message here..."
+        required
+        aria-label="Message input"
+      />
+      <button type="submit" aria-label="Send message">Send</button>
+    </form>
+  </div>
+
+  <script>
+    const chatMessages = document.getElementById('chatMessages');
+    const chatForm = document.getElementById('chatForm');
+    const topicInput = document.getElementById('topicInput');
+
+    function addMessage(text, sender) {
+      const msgDiv = document.createElement('div');
+      msgDiv.classList.add('message', sender);
+      msgDiv.textContent = text;
+      chatMessages.appendChild(msgDiv);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    chatForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const userText = topicInput.value.trim();
+      if (!userText) return;
+
+      addMessage(userText, 'user');
+      topicInput.value = '';
+
+      addMessage('Typing...', 'bot');
+      const loadingMsg = chatMessages.lastChild;
+
+      try {
+        const res = await fetch(`http://127.0.0.1:5000/info?topic=${encodeURIComponent(userText)}`);
+        if (!res.ok) throw new Error('Sorry, I do not have information on that topic.');
+
+        const data = await res.json();
+        loadingMsg.textContent = data.response;
+      } catch (error) {
+        loadingMsg.textContent = error.message;
+      }
+    });
+  </script>
+</body>
+</html>
